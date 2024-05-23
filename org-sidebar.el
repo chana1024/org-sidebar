@@ -565,6 +565,7 @@ child entries.  Should be called from a tree-view buffer."
                      (cons 'display-buffer-use-some-window
                            (list (cons 'inhibit-same-window t)))))
     (goto-char pos)
+    (recenter 0)
     (org-fold-show-entry)
     (org-fold-show-children)
     (when children
