@@ -368,28 +368,34 @@ Shows unscheduled, un-deadlined items in it."
 
 ;; TODO: Prevent self-insert-command in tree buffer, at least optionally.
 
-(defvar org-sidebar-tree-map
-  (let ((map (make-sparse-keymap))
-        (mappings '("<return>" org-sidebar-tree-jump
-                    "<mouse-1>" org-sidebar-tree-jump-mouse
-                    "<double-mouse-1>" org-sidebar-tree-jump-mouse
-                    "<triple-mouse-1>" org-sidebar-tree-jump-mouse
-                    "<mouse-2>" org-sidebar-tree-cycle-mouse
-                    "<double-mouse-2>" org-sidebar-tree-cycle-mouse
-                    "<triple-mouse-2>" org-sidebar-tree-cycle-mouse
-                    "<drag-mouse-1>" org-sidebar-tree-jump-branches-mouse
-                    "<drag-mouse-2>" org-sidebar-tree-jump-entries-mouse
-                    "TAB" org-sidebar-tree-cycle
-                    ;; I don't know if it's universally necessary to bind
-                    ;; all three of these, but it seems to be on my Org.
-                    "<S-tab>" org-sidebar-tree-cycle-global
-                    "<S-iso-lefttab>" org-sidebar-tree-cycle-global
-                    "<backtab>" org-sidebar-tree-cycle-global)))
-    (set-keymap-parent map org-mode-map)
-    (cl-loop for (key fn) on mappings by #'cddr
-             do (define-key map (kbd key) fn))
-    map)
-  "Keymap for `org-sidebar-tree' buffers.")
+(defvar org-sidebar-tree-mode-map (make-sparse-keymap)
+  "Keymap for org-sidebar-tree-mode.")
+
+;; Populate the minor mode map with original bindings
+(let ((mappings '("<return>" org-sidebar-tree-jump
+                  "<mouse-1>" org-sidebar-tree-jump-mouse
+                  "<double-mouse-1>" org-sidebar-tree-jump-mouse
+                  "<triple-mouse-1>" org-sidebar-tree-jump-mouse
+                  "<mouse-2>" org-sidebar-tree-cycle-mouse
+                  "<double-mouse-2>" org-sidebar-tree-cycle-mouse
+                  "<triple-mouse-2>" org-sidebar-tree-cycle-mouse
+                  "<drag-mouse-1>" org-sidebar-tree-jump-branches-mouse
+                  "<drag-mouse-2>" org-sidebar-tree-jump-entries-mouse
+                  "TAB" org-sidebar-tree-cycle
+                  ;; I don't know if it's universally necessary to bind
+                  ;; all three of these, but it seems to be on my Org.
+                  "<S-tab>" org-sidebar-tree-cycle-global
+                  "<S-iso-lefttab>" org-sidebar-tree-cycle-global
+                  "<backtab>" org-sidebar-tree-cycle-global)))
+  (cl-loop for (key fn) on mappings by #'cddr
+           do (define-key org-sidebar-tree-mode-map (kbd key) fn)))
+
+;; Define the minor mode itself
+(define-minor-mode org-sidebar-tree-mode
+  "Minor mode for Org Sidebar tree view buffers."
+  :init-value nil
+  :lighter " Tree" ;; Optional: Shows indicator in the mode line
+  :keymap org-sidebar-tree-mode-map)
 
 (defcustom org-sidebar-tree-jump-fn #'org-sidebar-tree-jump-indirect
   "Default function used to jump to entries from tree-view buffer."
@@ -453,7 +459,7 @@ it.  Otherwise, show it for current buffer."
         (warn "Existing tree buffer that is not indirect: %s" existing-buffer)))
     (setf tree-buffer (clone-indirect-buffer buffer-name nil 'norecord))
     (with-current-buffer tree-buffer
-      (use-local-map org-sidebar-tree-map)
+      (org-sidebar-tree-mode 1) ; Enable the minor mode
       (setf mode-line-format nil
             header-line-format (concat "Tree: " (buffer-name buffer)))
       (toggle-truncate-lines 1)
