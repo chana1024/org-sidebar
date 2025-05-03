@@ -368,11 +368,13 @@ Shows unscheduled, un-deadlined items in it."
 
 ;; TODO: Prevent self-insert-command in tree buffer, at least optionally.
 
+(defvar org-sidebar-tree-mode-hook nil)
 (defvar org-sidebar-tree-mode-map (make-sparse-keymap)
   "Keymap for org-sidebar-tree-mode.")
 
-;; Populate the minor mode map with original bindings
-(let ((mappings '("<return>" org-sidebar-tree-jump
+(defun org-sidebar-tree-mode/bind-key ()
+    "Populate the minor mode map with original bindings."
+    (let ((mappings '("<return>" org-sidebar-tree-jump
                   "<mouse-1>" org-sidebar-tree-jump-mouse
                   "<double-mouse-1>" org-sidebar-tree-jump-mouse
                   "<triple-mouse-1>" org-sidebar-tree-jump-mouse
@@ -382,14 +384,11 @@ Shows unscheduled, un-deadlined items in it."
                   "<drag-mouse-1>" org-sidebar-tree-jump-branches-mouse
                   "<drag-mouse-2>" org-sidebar-tree-jump-entries-mouse
                   "TAB" org-sidebar-tree-cycle
-                  ;; I don't know if it's universally necessary to bind
-                  ;; all three of these, but it seems to be on my Org.
                   "<S-tab>" org-sidebar-tree-cycle-global
                   "<S-iso-lefttab>" org-sidebar-tree-cycle-global
                   "<backtab>" org-sidebar-tree-cycle-global)))
   (cl-loop for (key fn) on mappings by #'cddr
-           do (define-key org-sidebar-tree-mode-map (kbd key) fn)))
-
+           do (define-key org-sidebar-tree-mode-map (kbd key) fn))))
 ;; Define the minor mode itself
 (define-minor-mode org-sidebar-tree-mode
   "Minor mode for Org Sidebar tree view buffers."
@@ -460,6 +459,8 @@ it.  Otherwise, show it for current buffer."
     (setf tree-buffer (clone-indirect-buffer buffer-name nil 'norecord))
     (with-current-buffer tree-buffer
       (org-sidebar-tree-mode 1) ; Enable the minor mode
+      (org-sidebar-tree-mode/bind-key)
+      (run-hooks 'org-sidebar-tree-mode-hook)
       (setf mode-line-format nil
             header-line-format (concat "Tree: " (buffer-name buffer)))
       (toggle-truncate-lines 1)
